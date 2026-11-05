@@ -47,6 +47,12 @@ For each candidate: `balanceOf(you) == 0`, price views (`price()`, `cost()`, `mi
 Simulate **per quantity**. A very common pattern is free at `qty = 1` and reverting at `qty = 5`
 (`0xcd1c8867`, `0x788a686f` in the wild): that is a one-per-wallet free slot, not a paid contract.
 
+To do that across every live launch at once instead of one contract at a time:
+`python3 scripts/sweep.py --wallet 0xYourWallet --free-only` — it probes each radar contract with
+`estimateGas(mint …, value = 0)` and prints who passes. Run the same sweep twice with two different wallets: a
+contract that passes for a wallet holding **no** Agent ID is not gate-enforced at all (open free mint, a different
+finding from a gated one).
+
 ## 4. Closed means closed — report it as a fact
 
 `freeClaimed == MAX_FREE_SHARES`, `freeLeft() == 0`, `freeMinted >= FREE_SUPPLY` → the free pool is gone, and paying

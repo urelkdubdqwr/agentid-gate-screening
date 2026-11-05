@@ -13,22 +13,34 @@ from __future__ import annotations
 import argparse
 import sys
 
-from lib import (AGENT_ID_REGISTRY, DEFAULT_RPC, as_addr, as_int, call,
-                 decode_revert_selector, enc_addr, enc_uint, name_revert, rpc)
+from lib import (AGENT_ID_REGISTRY, DEFAULT_RPC, as_addr, as_int, call, decode_revert_selector,
+                 decode_revert_string, enc_addr, enc_uint, find_selectors, get_code, name_revert, rpc)
+
+# probed in order; "qty" selectors take the quantity argument, bare ones take none
+CANDIDATES = [
+    ("mint(uint256)", "a0712d68", True),
+    ("freeMint(uint256)", "7c928fe9", True),
+    ("freeMint()", "5b70ea9f", False),
+    ("claimFree()", "f366afc9", False),
+    ("openFree()", "1644fa8e", False),
+    ("claim()", "4e71d92d", False),
+]
 
 
 def read_view(addr: str, selector: str, args: str = "", rpc_url: str = DEFAULT_RPC):
     return as_int(call(addr, selector, args, rpc_url=rpc_url))
 
 
-def simulate(addr: str, wallet: str, selector: str, qty: int, value: int, rpc_url: str):
-    data = "0x" + selector + enc_uint(qty)
+def simulate(addr: str, wallet: str, selector: str, qty: int, value: int, rpc_url: str, wants_qty: bool = True):
+    data = "0x" + selector + (enc_uint(qty) if wants_qty else "")
     res = rpc("eth_estimateGas", [{"from": wallet, "to": addr, "value": hex(value), "data": data}, "latest"],
               rpc_url=rpc_url)
     if isinstance(res, str) and res.startswith("0x"):
         return {"ok": True, "gas": int(res, 16), "selector": selector}
     sel = decode_revert_selector(res)
-    return {"ok": False, "selector": selector, "revert": sel, "reason": name_revert(sel) if sel else str(res)[:160]}
+    msg = decode_revert_string(res)
+    return {"ok": False, "selector": selector, "revert": sel,
+            "reason": msg or (name_revert(sel) if sel else str(res)[:160])}
 
 
 def report(addr: str, wallet: str, qty: int, rpc_url: str) -> int:
@@ -42,6 +54,7 @@ def report(addr: str, wallet: str, qty: int, rpc_url: str) -> int:
     mine = read_view(addr, "3cef28d2", enc_addr(wallet), rpc_url=rpc_url)
     cost_qty = read_view(addr, "b31dfc8f", enc_uint(qty), rpc_url=rpc_url)
     reg = as_addr(call(addr, "8854a0ff", rpc_url=rpc_url))
+    sels = set(find_selectors(get_code(addr, rpc_url)))
 
     def fmt(v, unit=""):
         return "n/a" if v is None else f"{v}{unit}"
@@ -64,21 +77,31 @@ def report(addr: str, wallet: str, qty: int, rpc_url: str) -> int:
     if max_wallet is not None and mine is not None:
         print(f"   wallet quota    {mine}/{max_wallet} used -> {max(max_wallet - mine, 0)} left")
 
-    sim = simulate(addr, wallet, "a0712d68", qty, 0, rpc_url)
-    if sim["ok"]:
-        print(f"   SIMULATE        ✅ mint({qty}) value 0 passes — gas ≈ {sim['gas']} (that gas is your budget)")
-        verdict = "FREE — mint now"
-    else:
-        print(f"   SIMULATE        ❌ mint({qty}) value 0 reverts -> {sim.get('reason')} (sel {sim.get('revert')})")
-        if sim.get("revert"):
-            print(f"   decode          https://www.4byte.directory/api/v1/signatures/?hex_signature=0x{sim['revert']}")
-        verdict = "not free via mint(uint256)"
-
-    if not sim["ok"]:
-        sim2 = simulate(addr, wallet, "7c928fe9", qty, 0, rpc_url)
-        if sim2["ok"]:
-            print(f"   SIMULATE alt    ✅ freeMint({qty}) passes — gas ≈ {sim2['gas']} (use selector 0x7c928fe9)")
-            verdict = "FREE via freeMint(uint256)"
+    if not sels:
+        sels = set(find_selectors(get_code(addr, rpc_url)))
+    verdict = "not free via any known free-mint selector"
+    sim = None
+    for label, selector, wants_qty in CANDIDATES:
+        if selector not in sels:
+            continue
+        res = simulate(addr, wallet, selector, qty if wants_qty else 0, 0, rpc_url, wants_qty=wants_qty)
+        if res["ok"]:
+            print(f"   SIMULATE        ✅ {label} value 0 passes — gas ≈ {res['gas']}"
+                  f" (selector 0x{selector} — that gas is your budget)")
+            verdict = f"FREE via {label} (0x{selector})"
+            sim = res
+            break
+        if sim is None:
+            sim = res
+            print(f"   SIMULATE        ❌ {label} value 0 reverts -> {res.get('reason')} (sel {res.get('revert')})")
+            if res.get("revert"):
+                print("   decode          https://www.4byte.directory/api/v1/signatures/?hex_signature=0x"
+                      + str(res["revert"]))
+        else:
+            print(f"   SIMULATE        ❌ {label} reverts too")
+    if sim is None:
+        print("   SIMULATE        ⏭  no known free-mint selector exists in this dispatcher"
+              " — recover it with scripts/recon.py")
 
     if cost_qty and cost_qty > 0:
         print(f"   note            costFor says this quantity costs {cost_qty} wei — free tier may be per-wallet only")

@@ -8,7 +8,7 @@
 
 ## What it is
 
-A standalone playbook plus five read-only screeners for the drops that gate on a Binance **Agent ID** (`.ai`) — NFT
+A standalone playbook plus six read-only screeners for the drops that gate on a Binance **Agent ID** (`.ai`) — NFT
 collections, token launches, mint farms, whitelist rounds, MCP-driven claims, Merkle airdrops. It walks the whole path:
 discovery feeds → bytecode truth → free-tier test → pre-mint risk check → transaction → on-chain verification.
 
@@ -69,6 +69,7 @@ python3 scripts/recon.py 0xContract                          # code size, proxy,
 python3 scripts/free_tier.py --wallet 0xYourWallet --qty 1 0xContract
 python3 scripts/safety.py 0xContract                         # owner powers, plumbing, source check
 python3 scripts/radar.py --hours 24 --free-only              # what is live right now
+python3 scripts/sweep.py --wallet 0xYourWallet --free-only   # batch: which live drops pass the gate, free
 ```
 
 Needs Python 3.9+ and one public BNB Chain RPC (default `https://bsc-dataseed.binance.org`, override with `--rpc` or
@@ -107,6 +108,7 @@ Read in order if you are new; jump by symptom if you are not.
 | [`scripts/free_tier.py`](scripts/free_tier.py) | free-tier state reads + `value = 0` simulation |
 | [`scripts/safety.py`](scripts/safety.py) | owner powers, token plumbing, source verification |
 | [`scripts/radar.py`](scripts/radar.py) | live discovery of new Agent ID–gated launches |
+| [`scripts/sweep.py`](scripts/sweep.py) | batch screen every gated launch at once: `estimateGas(value 0)` per contract |
 | [`scripts/lib.py`](scripts/lib.py) | JSON-RPC + ABI-shim helpers shared by the above |
 | [`smoke.sh`](smoke.sh) | read-only proof the repo works from a fresh clone |
 | [`data/known-drops.csv`](data/known-drops.csv) | verified Agent ID–gated drops and their free rule |

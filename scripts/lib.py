@@ -173,6 +173,22 @@ def decode_revert_selector(data) -> str | None:
     return m.group(1).lower() if m else None
 
 
+def decode_revert_string(data) -> str | None:
+    """Decode an `Error(string)` revert payload (0x08c379a0 + ABI string) into the message text."""
+    blob = json.dumps(data) if not isinstance(data, str) else data
+    m = re.search(r"0x08c379a0([0-9a-fA-F]+)", blob)
+    if not m:
+        return None
+    try:
+        raw = m.group(1)
+        offset = int(raw[0:64], 16) * 2
+        length = int(raw[offset:offset + 64], 16)
+        text = bytes.fromhex(raw[offset + 64:offset + 64 + length * 2])
+        return text.decode("utf-8", "replace")
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def name_revert(selector: str) -> str:
     try:
         d = get_json(f"https://www.4byte.directory/api/v1/signatures/?hex_signature=0x{selector}",
