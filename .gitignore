@@ -3,6 +3,14 @@
 state.json
 .agentid-gate-screen/
 
+# secrets — should already be outside the repo; belt and braces
+.env
+.env.*
+*.key
+*.pem
+keys/
+wallets/
+
 # python
 __pycache__/
 *.pyc
