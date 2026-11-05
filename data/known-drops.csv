@@ -14,4 +14,4 @@ address,chain,name,gate_type,free_rule,free_supply,max_per_wallet,paid_price_bnb
 0x474949ebcee9e3a425b6d8033f1e2c8dd3ae755e,bsc,GHOST,registry,free claim per wallet (freeMinted 230/17500),n/a,100,n/a,yes,taken 2026-11-05,mint(uint256) value 0 passes gas 267k; NFT id 266
 0x1ef7588dff561b7390d3af23d06e684d64217419,bsc,Sonofluidic,registry,freeMint() against FREE_SUPPLY 2260,2260,unknown,n/a,yes,taken 2026-11-05,freeMint() 0x5b70ea9f; freeRemaining 2075 at mint; NFT id 186
 0x2d15595d2e6efb1c1ebf938cd7fd0f57d11c6b86,bsc,(unnamed) agent mint,registry,1 free mint per wallet,n/a,unknown,n/a,yes,taken 2026-11-05,mint(uint256) value 0 passes; pays 50,000,000 tokens from 0x5e1a6b3041873b05d21c24cce8c1af763846bea7
-0x150f74fd968571ec9c664c176bd3b46cc215fd0d,bsc,(unnamed) agent mint,registry,1 free mint per wallet,n/a,unknown,n/a,yes,taken 2026-11-05,same template as 0x2d15595d; 50,000,000 tokens paid out
+0x150f74fd968571ec9c664c176bd3b46cc215fd0d,bsc,(unnamed) agent mint,registry,1 free mint per wallet,n/a,unknown,n/a,yes,taken 2026-11-05,same template as 0x2d15595d; pays 50,000,000 tokens from 0x8eee365dab36230724172a7691b6d850b441e5f0
