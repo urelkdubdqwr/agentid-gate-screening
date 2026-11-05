@@ -1,13 +1,16 @@
 flowchart TD
-  A["Discovery feeds<br/>unitytool radar · call channel · catalog · X threads"] --> B["radar.py<br/>gate filter + dedupe state"]
+  A["Discovery — feeds + chain<br/>radar · call channel · catalog<br/>registry-marker scan · burst mint logs"] --> B["radar.py<br/>gate filter + dedupe state"]
   B --> C{"new candidate?"}
   C -->|no| Z["silent exit<br/>nothing to report"]
   C -->|yes| D["recon.py<br/>eth_getCode · proxy · selector recovery"]
-  D --> E["free_tier.py<br/>FREE_SUPPLY · costFor · mintedBy"]
-  E --> F{"estimateGas mint qty<br/>value = 0"}
-  F -->|reverts| G["verdict: tier gone,<br/>wrong selector, or time gate"]
-  F -->|passes| H["safety.py<br/>owner powers · token plumbing · source"]
-  H --> I["sign<br/>cast · web3.py · MPC wallet CLI"]
-  I --> J["verify<br/>receipt status 1 + balanceOf / ownerOf"]
-  J --> K["report card<br/>qty · gas · tx · proof"]
-  G --> K
+  D --> E{"where does the gate live?"}
+  E -->|on-chain registry read| F["free_tier.py<br/>FREE_SUPPLY · costFor · mintedBy"]
+  E -->|backend voucher / MCP| G["site or MCP<br/>connect · bind-X · claim window · voucher"]
+  F --> H{"estimateGas mint qty<br/>value = 0"}
+  G --> H
+  H -->|reverts| I["verdict: tier gone,<br/>wrong selector, or time gate"]
+  H -->|passes| J["safety.py<br/>owner powers · token plumbing · source"]
+  J --> K["sign<br/>cast · web3.py · MPC wallet CLI"]
+  K --> L["verify<br/>receipt status 1 + balanceOf / ownerOf"]
+  L --> M["report card<br/>qty · gas · tx · proof"]
+  I --> M

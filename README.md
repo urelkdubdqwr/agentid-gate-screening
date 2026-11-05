@@ -9,8 +9,8 @@
 ## What it is
 
 A standalone playbook plus five read-only screeners for the drops that gate on a Binance **Agent ID** (`.ai`) — NFT
-collections, token launches, mint farms, whitelist rounds. It walks the whole path: discovery feeds → bytecode truth →
-free-tier test → pre-mint risk check → transaction → on-chain verification.
+collections, token launches, mint farms, whitelist rounds, MCP-driven claims, Merkle airdrops. It walks the whole path:
+discovery feeds → bytecode truth → free-tier test → pre-mint risk check → transaction → on-chain verification.
 
 The premise is that a landing page is not evidence. "Free mint" means `estimateGas(value = 0)` passes from your wallet
 right now; "sold out" means `free_minted >= free_cap`; "gated" means the contract's own registry getter points at the
@@ -26,7 +26,8 @@ bypass a gate: a wallet without an Agent ID still cannot mint, which is the poin
 
 - **Discovery is polled, not awaited.** `scripts/radar.py` reads the public launch radar, the public call channel and
   the curated catalog, keeps only entries whose gate reference mentions the Agent ID registry, dedupes against a state
-  file, and prints nothing when nothing is new — so it can run on a schedule without turning into noise.
+  file, and prints nothing when nothing is new — so it can run on a schedule without turning into noise. The chain-first
+  half (new contracts carrying the registry marker, burst-mint logs) is in [`docs/11`](docs/11-chain-first-discovery.md).
 - **Recon reads the dispatcher, not the tweet.** `scripts/recon.py` pulls runtime bytecode, detects EIP-1967 proxies,
   recovers every function selector and names them (4byte / openchain). That is how a contract exposing only
   `openFree()` `0x1644fa8e` and `agentRegistry()` `0x0d1cfcae` — names no template expects — still gets judged
@@ -34,7 +35,8 @@ bypass a gate: a wallet without an Agent ID still cannot mint, which is the poin
 - **"Free" is a simulation, not a claim.** `scripts/free_tier.py` reads `FREE_SUPPLY` / `MAX_SUPPLY` /
   `MAX_PER_WALLET` / `price` / `mintedBy(you)` / `costFor(qty)`, then simulates `mint(qty)` with `value = 0`. Pass =
   the mint is free for that quantity; revert = decode the selector, then check whether the value that *is* demanded
-  comes back through a `claimFree()`/refund path — which makes it a deposit, not a price.
+  comes back through a `claimFree()`/refund path — which makes it a deposit, not a price
+  ([`docs/12`](docs/12-deposit-refund-farms.md)).
 - **Safety is mechanical before it is judgement.** `scripts/safety.py` reports source verification, upgradeability,
   owner powers (`pause`, `withdraw`, `transferOwnership`), the payee, and whether the mint path carries approvals or
   `transferFrom` — the plumbing a drainer needs.
@@ -73,18 +75,33 @@ Needs Python 3.9+ and one public BNB Chain RPC (default `https://bsc-dataseed.bi
 `RPC_URL`). No `pip install`, no API key, no account. Ethereum-side rounds are screened with the same scripts by passing
 an Ethereum RPC.
 
+## The recipes
+
+Read in order if you are new; jump by symptom if you are not.
+
+| Recipe | Use it when |
+| --- | --- |
+| [`00` what is an Agent ID](docs/00-what-is-agent-id.md) | you need to know what the gate *is* (registry, handle, token id) |
+| [`01` gate mechanics](docs/01-gate-mechanics.md) | deciding whether the gate is on-chain (registry read) or backend (voucher) |
+| [`02` discovery](docs/02-discovery.md) | filling a watchlist of drops from public feeds |
+| [`03` verify on-chain](docs/03-verify-onchain.md) | judging any contract: proxy, selectors, free tier, verdict |
+| [`04` risk checklist](docs/04-risk-checklist.md) | before pressing sign: owner powers, drainer plumbing, approvals |
+| [`05` execute & verify](docs/05-execute-and-verify.md) | building calldata, signing, proving the mint landed |
+| [`06` automation](docs/06-automation.md) | turning the loop into a watcher that is quiet when nothing happens |
+| [`07` case studies](docs/07-case-studies.md) | seeing the mechanics on real drops and real transactions |
+| [`08` MCP drops](docs/08-mcp-drops.md) | the drop runs over an MCP server: sign-in → claim → window → ticket → mint |
+| [`09` whitelist rounds](docs/09-whitelist-registration.md) | allocation comes from the site API (`connect`/`bind-x`/`task`/`voucher`), not the contract |
+| [`10` bytecode ABI recovery](docs/10-bytecode-abi-recovery.md) | the contract is unverified and the usual selectors revert into the void |
+| [`11` chain-first discovery](docs/11-chain-first-discovery.md) | you want drops before the announcement: registry fingerprint + burst mints |
+| [`12` deposit-refund farms](docs/12-deposit-refund-farms.md) | `value > 0` but there is a `claimFree`/refund exit — solvency and emission math |
+| [`13` FCFS races](docs/13-fcfs-races.md) | the sale opens at a block time and slots die in seconds |
+| [`14` smart-wallet follow](docs/14-smart-wallet-follow.md) | building a watchlist of wallets that keep winning, with entry/exit rules |
+| [`15` Merkle claims](docs/15-merkle-claims.md) | the payout is an airdrop claim, not a mint |
+
 ## What's inside
 
 | Path | What it is |
 | --- | --- |
-| [`docs/00-what-is-agent-id.md`](docs/00-what-is-agent-id.md) | what a `.ai` Agent ID is, where it lives, why projects gate on it |
-| [`docs/01-gate-mechanics.md`](docs/01-gate-mechanics.md) | the two gate designs: on-chain registry check vs backend EIP-712 voucher |
-| [`docs/02-discovery.md`](docs/02-discovery.md) | the discovery feeds worth polling (APIs, catalogs, channels, X) |
-| [`docs/03-verify-onchain.md`](docs/03-verify-onchain.md) | bytecode recon, selector recovery, free-tier reads, simulation, verdicts |
-| [`docs/04-risk-checklist.md`](docs/04-risk-checklist.md) | pre-mint checklist: owner powers, honeypots, drainers, taxes |
-| [`docs/05-execute-and-verify.md`](docs/05-execute-and-verify.md) | signing paths, receipts, balance/ownership proofs |
-| [`docs/06-automation.md`](docs/06-automation.md) | turning the manual loop into a watcher that stays quiet when nothing happens |
-| [`docs/07-case-studies.md`](docs/07-case-studies.md) | real drops, real txs, what worked and what got missed |
 | [`scripts/gate_check.py`](scripts/gate_check.py) | does this wallet hold a `.ai` Agent ID? |
 | [`scripts/recon.py`](scripts/recon.py) | bytecode, proxy detection, selector recovery + naming |
 | [`scripts/free_tier.py`](scripts/free_tier.py) | free-tier state reads + `value = 0` simulation |
