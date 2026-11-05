@@ -1,0 +1,13 @@
+flowchart TD
+  A["Discovery feeds<br/>unitytool radar · call channel · catalog · X threads"] --> B["radar.py<br/>gate filter + dedupe state"]
+  B --> C{"new candidate?"}
+  C -->|no| Z["silent exit<br/>nothing to report"]
+  C -->|yes| D["recon.py<br/>eth_getCode · proxy · selector recovery"]
+  D --> E["free_tier.py<br/>FREE_SUPPLY · costFor · mintedBy"]
+  E --> F{"estimateGas mint qty<br/>value = 0"}
+  F -->|reverts| G["verdict: tier gone,<br/>wrong selector, or time gate"]
+  F -->|passes| H["safety.py<br/>owner powers · token plumbing · source"]
+  H --> I["sign<br/>cast · web3.py · MPC wallet CLI"]
+  I --> J["verify<br/>receipt status 1 + balanceOf / ownerOf"]
+  J --> K["report card<br/>qty · gas · tx · proof"]
+  G --> K

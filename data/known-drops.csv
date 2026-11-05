@@ -1,0 +1,12 @@
+address,chain,name,gate_type,free_rule,free_supply,max_per_wallet,paid_price_bnb,verified,status,notes
+0xc9f30f3d8e8858c3360eb96843a8de9138e27ec4,bsc,Cipher Agent,registry,5 free per wallet,50,5,0.0005,yes,free tier drained,template mint(uint256)+FREE_SUPPLY; 10 NFTs taken gas-only 2026-11-05
+0x98577dc06adafd432cff0c92517b936e2bce7b46,bsc,Tessera Agent,registry,5 free per wallet,50,5,0.0005,yes,free tier drained,same template as Cipher; 5 NFTs taken gas-only 2026-11-05
+0x08393dad165d90e7258501fe1dfb5f3498644011,bsc,AgentBox,registry,1 free box per Agent ID,n/a,1,n/a,yes,open,openFree() 0x1644fa8e; agentRegistry() 0x0d1cfcae; boxes(id) view
+0x3048E07C057eF694D4E431154DafAd473d1AA18B,bsc,LAZABIT mask,registry,#1 free then 0.00025+ ladder,unknown,25,0.00025,yes,paid ladder live,mint(uint256) 0xa0712d68; mintedBy(wallet) brackets
+0x7638Bf791c601152A0E21899B1192cf2F7fe2348,bsc,Printer Ai (PAI),registry,first mint free,unknown,15,ladder USD,yes,paid ladder live,quote() per wallet; totalSupply() reverts
+0x6288DFe86f22B53eEB6886aE2D78941de7483743,bsc,AGC / Agentic Coin,registry,deposit 0.002 BNB/share refunded after 24h,epoch-based,5/day,0.002,yes,deposit-refund,mintFree 0x0db5ae5a + claimFree 0x73fc9ccc; effective free
+0x439643cfd023c247519518B7F73d06823E1F2fCe,bsc,AgentsEstates,registry,free build->ticket->mint,unknown,unknown,0,yes,market live,MCP driven; EnforcedPause during windows
+0x9d0F4Cf4e0D7387C346be75839d308e49Fd29F62,bsc,HelloAgents (HGA),registry,2 free per wallet,unknown,20,0.002,yes,free tier used,freeMint(uint256) 0x7c928fe9 needs qty arg
+0xc68aC7a1e076918DFFf9279698dc2976268691Df,bsc,Agent Covenant,registry,1 free per wallet,unknown,10,0.001,yes,free tier used,mint() 0x1249c58b; doc ABI drifted from deployed
+0xBF01c3eF1Bc368288067d4AC49bA9b147DE3a461,eth,$AGI token,voucher,n/a (paid ladder + 1000 free shares),1000,15,0.0001 ETH/share,no,launch,identity on BSC; minter must own the Agent ID; see docs/07 case 3
+0xb27e219a28dCDE18278355e41C5bdc8828eec459,eth,$AGI mint contract,voucher,mintFree(agentId,wl,shares),1000,15,0.0001 ETH/share,yes,launch,voucher-gated; wl true/false tracks
